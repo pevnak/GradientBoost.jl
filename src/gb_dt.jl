@@ -4,17 +4,17 @@ module GBDecisionTree
 using DecisionTree
 using DataStructures
 
-importall GradientBoost.GB
-importall GradientBoost.LossFunctions
+using GradientBoost.GB
+using GradientBoost.LossFunctions
 
 export GBDT,
        build_base_func
 
 # Gradient boosted decision tree algorithm.
-type GBDT <: GBAlgorithm
+struct GBDT <: GBAlgorithm
   loss_function::LossFunction
-  sampling_rate::FloatingPoint
-  learning_rate::FloatingPoint
+  sampling_rate::Float64
+  learning_rate::Float64
   num_iterations::Int
   tree_options::Dict
 
@@ -22,10 +22,10 @@ type GBDT <: GBAlgorithm
     sampling_rate=0.6, learning_rate=0.1, 
     num_iterations=100, tree_options=Dict())
 
-    default_options = {
+    default_options = Dict(
       :maxlabels => 5,
       :nsubfeatures => 0
-    }
+    )
     options = merge(default_options, tree_options)
     new(loss_function, sampling_rate, learning_rate, num_iterations, options)
   end
@@ -87,11 +87,11 @@ end
 
 # DT Helper Functions
 
-type InstanceNodeIndex
+struct InstanceNodeIndex
   i2n::Vector{Leaf}
   n2i::DefaultDict{Leaf, Vector{Int}}
 
-  function InstanceNodeIndex(tree::Union(Leaf,Node), instances)
+  function InstanceNodeIndex(tree::Union{Leaf,Node}, instances)
     num_instances = size(instances, 1)
     i2n = Array(Leaf, num_instances)
     n2i = DefaultDict(Leaf, Vector{Int}, () -> Int[])
@@ -122,11 +122,11 @@ end
 
 # Update region by having updated leaf value encoded
 # in a leaf-to-value mapping.
-function update_regions!{T}(n2v::Dict{Leaf, T}, node::Node, val_func::Function)
+function update_regions!(n2v::Dict{Leaf, T}, node::Node, val_func::Function) where {T}
   update_regions!(n2v, node.left, val_func)
   update_regions!(n2v, node.right, val_func)
 end
-function update_regions!{T}(n2v::Dict{Leaf, T}, leaf::Leaf, val_func::Function)
+function update_regions!(n2v::Dict{Leaf, T}, leaf::Leaf, val_func::Function) where {T}
   n2v[leaf] = val_func(leaf)
 end
 

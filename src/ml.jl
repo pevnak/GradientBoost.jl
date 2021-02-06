@@ -1,10 +1,10 @@
 # Machine learning API for gradient boosting.
 module ML
 
-importall GradientBoost.LossFunctions
-importall GradientBoost.GB
-importall GradientBoost.GBDecisionTree
-importall GradientBoost.GBBaseLearner
+using GradientBoost.LossFunctions
+using GradientBoost.GB
+using GradientBoost.GBDecisionTree
+using GradientBoost.GBBaseLearner
 
 export GBLearner,
        fit!,
@@ -20,7 +20,7 @@ export GBLearner,
 
 
 # Gradient boosting learner as defined by ML API.
-type GBLearner
+struct GBLearner
   algorithm::GBAlgorithm
   output::Symbol
   model

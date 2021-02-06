@@ -1,5 +1,6 @@
 # Util functions.
 module Util
+using Random
 
 export weighted_median,
        err_must_be_overriden,
@@ -10,8 +11,7 @@ export weighted_median,
 # @param weights Weights of values.
 # @param values Values.
 # @return Weighted median.
-function weighted_median{U,V<:Real}(
-  weights::AbstractVector{U}, values::AbstractVector{V})
+function weighted_median( weights::AbstractVector{U}, values::AbstractVector{V}) where {U,V<:Real}
 
   k = 1
   sorted_ind = sortperm(values)
@@ -38,7 +38,7 @@ end
 # @return Two partitions of indices, left and right.
 function holdout(n, right_prop)
   shuffled_indices = randperm(n)
-  partition_pivot = int(right_prop * n)
+  partition_pivot = Int(right_prop * n)
   right = shuffled_indices[1:partition_pivot]
   left = shuffled_indices[partition_pivot+1:end]
   return (left, right)

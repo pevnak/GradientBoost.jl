@@ -1,0 +1,18 @@
+name = "GradientBoost"
+uuid = "edca200d-a657-4396-814d-161a93f701e9"
+authors = ["Pevnak <pevnak@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+DecisionTree = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

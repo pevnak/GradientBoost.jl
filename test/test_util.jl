@@ -1,53 +1,47 @@
-module TestUtil
+using Test
+using GradientBoost.Util
+using Random
 
-using FactCheck
-importall GradientBoost.Util
+@testset "utils" begin
+    @testset "weighted_median" begin
+        weights = [1, 1, 1, 1, 1]
+        values = [1, 2, 3, 4, 5]
+        @test weighted_median(weights, values) == 3
 
-facts("Util functions") do
-  context("err_must_be_overriden throws an error") do
-    @fact_throws err_must_be_overriden()
-  end
+        weights = [1, 1, 1, 1, 1]
+        values = [5, 4, 3, 2, 1]
+        @test weighted_median(weights, values) == 3
 
-  context("weighted_median works") do
-    weights = [1, 1, 1, 1, 1]
-    values = [1, 2, 3, 4, 5]
-    @fact weighted_median(weights, values) => 3
+        weights = [1, 1, 1, 1, 1]
+        values = [4, 5, 2, 3, 1]
+        @test weighted_median(weights, values) == 3 
 
-    weights = [1, 1, 1, 1, 1]
-    values = [5, 4, 3, 2, 1]
-    @fact weighted_median(weights, values) => 3
+        weights = [1, 3, 1, 1, 1]
+        values = [1, 2, 3, 4, 5]
+        @test weighted_median(weights, values) == 2 
 
-    weights = [1, 1, 1, 1, 1]
-    values = [4, 5, 2, 3, 1]
-    @fact weighted_median(weights, values) => 3 
+        weights = [1, 1, 1, 1, 100]
+        values = [1, 2, 3, 4, 5]
+        @test weighted_median(weights, values) == 5
 
-    weights = [1, 3, 1, 1, 1]
-    values = [1, 2, 3, 4, 5]
-    @fact weighted_median(weights, values) => 2 
+        weights = [100, 1, 1, 1, 1]
+        values = [1, 2, 3, 4, 5]
+        @test weighted_median(weights, values) == 1
 
-    weights = [1, 1, 1, 1, 100]
-    values = [1, 2, 3, 4, 5]
-    @fact weighted_median(weights, values) => 5
+        weights = [0.5, 0.5, 1, 1, 1]
+        values = [1, 2, 3, 4, 5]
+        @test weighted_median(weights, values) == 3
+    end
 
-    weights = [100, 1, 1, 1, 1]
-    values = [1, 2, 3, 4, 5]
-    @fact weighted_median(weights, values) => 1
+    @testset "holdout returns proportional partitions" begin
+        n = 10
+        right_prop = 0.3
+        (left, right) = holdout(n, right_prop)
 
-    weights = [0.5, 0.5, 1, 1, 1]
-    values = [1, 2, 3, 4, 5]
-    @fact weighted_median(weights, values) => 3
-  end
-
-  context("holdout returns proportional partitions") do
-    n = 10
-    right_prop = 0.3
-    (left, right) = holdout(n, right_prop)
-
-    @fact size(left, 1) => n - (n * right_prop)
-    @fact size(right, 1) => n * right_prop
-    @fact intersect(left, right) => isempty
-    @fact size(union(left, right), 1) => n
-  end
-end
+        @test size(left, 1) == n - (n * right_prop)
+        @test size(right, 1) == n * right_prop
+        @test isempty(intersect(left, right))
+        @test size(union(left, right), 1) == n
+    end
 
 end # module

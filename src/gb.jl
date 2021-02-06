@@ -1,8 +1,8 @@
 # Gradient boosting.
 module GB
 
-importall GradientBoost.Util
-importall GradientBoost.LossFunctions
+import GradientBoost.Util
+import GradientBoost.LossFunctions
 
 export GBAlgorithm,
        GBModel,
@@ -14,12 +14,12 @@ export GBAlgorithm,
 
 
 # Gradient boost algorithm.
-abstract GBAlgorithm
+abstract type GBAlgorithm end
 
 # Gradient boost model.
-type GBModel
-  learning_rate::FloatingPoint
-  base_funcs::Vector{Function}
+struct GBModel
+  learning_rate::Float64
+  base_funcs::Vector
 end
 
 # Perform stochastic gradient boost.
