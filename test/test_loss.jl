@@ -103,18 +103,16 @@ end
     lf = BinomialDeviance()
     expected = [ 
       [0.2689414213699951, 0.2689414213699951], 
-      [0.2689414213699951, -0.731059], 
-      [-0.731059, 0.2689414213699951], 
-      [-0.731059, -0.731059], 
-      [-0.731059, -0.731059] 
+      [0.2689414213699951, -0.7310585786300049], 
+      [-0.7310585786300049, 0.2689414213699951], 
+      [-0.7310585786300049, -0.7310585786300049], 
+      [-0.7310585786300049, -0.7310585786300049] 
     ]
     test_negative_gradient(lf, bern_y_examples, y_pred_examples, expected)
   end
   @testset "BinomialDeviance minimizing_scalar works" begin
     lf = BinomialDeviance()
-    expected = [ Inf, 0.0, 0.0, -Inf, -Inf}
+    expected = [ Inf, 0.0, 0.0, -Inf, -Inf]
     test_minimizing_scalar(lf, bern_y_examples, expected)
   end
 end
-
-end # module

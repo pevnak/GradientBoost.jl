@@ -80,7 +80,7 @@ end
 function fit_best_constant(lf::LeastAbsoluteDeviation,
   labels, psuedo, psuedo_pred, prev_func_pred)
 
-  weights = abs(psuedo_pred)
+  weights = abs.(psuedo_pred)
   values = labels .- prev_func_pred
 
   for i = 1:length(labels)

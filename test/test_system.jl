@@ -1,12 +1,11 @@
-# System tests.
-module TestSystem
+using Test
 
-using FactCheck
+using GradientBoost.Util
+using GradientBoost.ML
+using DelimitedFiles
+using Statistics
 
-importall GradientBoost.Util
-importall GradientBoost.ML
-
-import GLM: fit, predict, LinearModel
+using GLM: fit, predict, LinearModel
 
 # Experiment on GBLearner
 #
@@ -16,7 +15,7 @@ import GLM: fit, predict, LinearModel
 function experiment(gbl_func, score_func, baseline_func,
   num_experiments, instances, labels)
 
-  scores = Array(Float64, num_experiments)
+  scores = zeros(Float64, num_experiments)
   for i = 1:num_experiments
     # Obtain training and test set
     (train_ind, test_ind) = holdout(size(instances, 1), 0.2)
@@ -37,7 +36,7 @@ function experiment(gbl_func, score_func, baseline_func,
 
   # Sanity check, score should be less than baseline.
   baseline = baseline_func(labels)
-  @fact mean(scores) <= baseline => true
+  @test mean(scores) <= baseline 
 
   scores
 end
@@ -62,7 +61,7 @@ end
 
 # Mean absolute deviation
 function mad(predictions, actual)
-  mean(abs(actual .- predictions))
+  mean(abs.(actual .- predictions))
 end
 function baseline_mad(labels)
   label_median = median(labels)
@@ -82,10 +81,10 @@ function ML.learner_predict(lf::LossFunction,
   predict(model, instances)
 end
 
-facts("System tests") do
-  context("iris dataset is handled by GBDT") do
+@testset "System tests" begin
+  @testset "iris dataset is handled by GBDT" begin
     # Get data
-    iris = readcsv(joinpath(dirname(@__FILE__), "iris.csv"))
+    iris = readdlm(joinpath(dirname(@__FILE__), "iris.csv"),',')
     instances = iris[:, 1:(end-1)]
     labels = iris[:, end]
 
@@ -108,9 +107,9 @@ facts("System tests") do
     )
   end
 
-  context("mtcars dataset is handled") do
+  @testset "mtcars dataset is handled" begin
     # Get data
-    mtcars = readcsv(joinpath(dirname(@__FILE__), "mtcars.csv"))
+    mtcars = readdlm(joinpath(dirname(@__FILE__), "mtcars.csv"),',')
     instances = mtcars[:, 2:end]
     labels = mtcars[:, 1]
 
@@ -177,5 +176,3 @@ facts("System tests") do
     end
   end
 end
-
-end # module

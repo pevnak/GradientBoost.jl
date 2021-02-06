@@ -1,8 +1,9 @@
 # Gradient boosting.
 module GB
 
-import GradientBoost.Util
-import GradientBoost.LossFunctions
+using Random
+using GradientBoost.Util
+using GradientBoost.LossFunctions
 
 export GBAlgorithm,
        GBModel,
@@ -31,7 +32,7 @@ end
 function stochastic_gradient_boost(gb::GBAlgorithm, instances, labels)
   # Initialize base functions collection
   num_iterations = gb.num_iterations
-  base_funcs = Array(Function, num_iterations+1)
+  base_funcs = Vector{Function}(undef, num_iterations+1)
 
   # Create initial base function
   initial_val = minimizing_scalar(gb.loss_function, labels)
@@ -99,7 +100,7 @@ function build_base_func(
   prev_func_pred,
   psuedo)
 
-  err_must_be_overriden()
+  err_must_be_overriden("GradientBoost.GB.build_base_func")
 end
 
 # Default sample method for gradient boosting algorithms.
@@ -113,7 +114,7 @@ function create_sample_indices(gb::GBAlgorithm, instances, labels)
   n = size(instances, 1)
   prop = gb.sampling_rate
 
-  ind = randperm(n)[1:int(prop * n)]
+  ind = randperm(n)[1:round(Int, prop * n, RoundNearestTiesUp)]
 end
 
 end # module

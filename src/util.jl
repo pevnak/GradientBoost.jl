@@ -26,8 +26,8 @@ function weighted_median( weights::AbstractVector{U}, values::AbstractVector{V})
   return values[sorted_ind[k]]
 end
 
-function err_must_be_overriden()
-  error("This function must be overriden.")
+function err_must_be_overriden(s = "")
+  error("Function must be overriden.")
 end
 
 # Holdout method that partitions a collection
@@ -38,7 +38,7 @@ end
 # @return Two partitions of indices, left and right.
 function holdout(n, right_prop)
   shuffled_indices = randperm(n)
-  partition_pivot = Int(right_prop * n)
+  partition_pivot = round(Int, right_prop * n)
   right = shuffled_indices[1:partition_pivot]
   left = shuffled_indices[partition_pivot+1:end]
   return (left, right)

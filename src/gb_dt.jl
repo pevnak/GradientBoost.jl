@@ -3,6 +3,7 @@ module GBDecisionTree
 
 using DecisionTree
 using DataStructures
+using Statistics
 
 using GradientBoost.GB
 using GradientBoost.LossFunctions
@@ -23,8 +24,11 @@ struct GBDT <: GBAlgorithm
     num_iterations=100, tree_options=Dict())
 
     default_options = Dict(
-      :maxlabels => 5,
-      :nsubfeatures => 0
+      :n_subfeatures       => 0,
+      :max_depth           => -1,
+      :min_samples_leaf    => 5,
+      :min_samples_split   => 2,
+      :min_purity_increase => 0.0,
     )
     options = merge(default_options, tree_options)
     new(loss_function, sampling_rate, learning_rate, num_iterations, options)
@@ -39,10 +43,14 @@ function GB.build_base_func(
   psuedo)
 
   # Train learner
+  max_features = size(instances, 2)
   model = build_tree(
     psuedo, instances, 
-    gb.tree_options[:maxlabels],
-    gb.tree_options[:nsubfeatures] 
+    gb.tree_options[:n_subfeatures],
+    gb.tree_options[:max_depth],
+    gb.tree_options[:min_samples_leaf],
+    gb.tree_options[:min_samples_split],
+    gb.tree_options[:min_purity_increase],
   )
   psuedo_pred = apply_tree(model, instances)
 
@@ -93,8 +101,8 @@ struct InstanceNodeIndex
 
   function InstanceNodeIndex(tree::Union{Leaf,Node}, instances)
     num_instances = size(instances, 1)
-    i2n = Array(Leaf, num_instances)
-    n2i = DefaultDict(Leaf, Vector{Int}, () -> Int[])
+    i2n = Vector{Leaf}(undef, num_instances)
+    n2i = DefaultDict{Leaf, Vector{Int}}( () -> Int[])
 
     for i = 1:num_instances
       node = instance_to_node(tree, instances[i,:])

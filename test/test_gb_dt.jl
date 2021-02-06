@@ -1,8 +1,6 @@
-module TestGBDecisionTree
-
-using FactCheck
-importall GradientBoost.GBDecisionTree
-importall GradientBoost.LossFunctions
+using Test
+using GradientBoost.GBDecisionTree
+using GradientBoost.LossFunctions
 
 using DecisionTree
 
@@ -23,8 +21,8 @@ function create_tree(instances, labels)
   model
 end
 
-facts("GB Decision Tree") do
-  context("build_base_func works") do
+@testset "GB Decision Tree" begin 
+  @testset "build_base_func works" begin
     gb = GBDT(;
       loss_function=LeastSquares(),
       sampling_rate=0.5,
@@ -48,26 +46,26 @@ facts("GB Decision Tree") do
     )
 
     predictions = base_func(instances)
-    expected = { 6.27; 6.27; 6.27 }
-    @fact predictions => roughly(expected)
+    expected = [6.2700000000000005; 6.2700000000000005; 6.2700000000000005 ]
+    @test predictions ≈ expected
   end
 
-  context("instance_to_node indexes") do
+  @testset "instance_to_node indexes" begin
     model = create_tree(instances, labels)
     inst_node_index = GBDecisionTree.InstanceNodeIndex(model, instances)
     num_instances = size(instances, 1)
 
-    @fact length(inst_node_index.n2i) => num_instances - 1
+    @test length(inst_node_index.n2i) == num_instances - 1
     
     n2i_values = reduce(union, collect(values(inst_node_index.n2i)))
-    @fact length(n2i_values) => num_instances
+    @test length(n2i_values) == num_instances
 
     for i = 1:num_instances
-      @fact in(i, inst_node_index.n2i[inst_node_index.i2n[i]]) => true
+      @test in(i, inst_node_index.n2i[inst_node_index.i2n[i]])
     end
   end
 
-  context("update_regions! updates terminal regions on tree") do
+  @testset "update_regions! updates terminal regions on tree" begin
     model = create_tree(instances, labels)
     function val_func(leaf::Leaf)
       leaf.majority / 2.0
@@ -79,13 +77,13 @@ facts("GB Decision Tree") do
     for i = 1:num_instances
       old_pred = apply_tree(model, instances[i,:])
       pred_node = GBDecisionTree.instance_to_node(model, instances[i,:])
-      new_pred = {n2v[pred_node]}
+      new_pred = n2v[pred_node]
 
-      @fact old_pred ./ 2.0 => new_pred
+      @test old_pred ./ 2.0 == new_pred
     end
   end
 
-  context("LeastAbsoluteDeviation fit_best_constant works") do
+  @testset "LeastAbsoluteDeviation fit_best_constant works" begin
     lf = LeastAbsoluteDeviation()
     dummy_vec = [0.0,0.0,0.0,0.0]
     labels = [0.0,1.0,2.0,3.0]
@@ -95,9 +93,9 @@ facts("GB Decision Tree") do
     actual = GBDecisionTree.fit_best_constant(
       lf, labels, dummy_vec, dummy_vec, prev_func_pred
     )
-    @fact actual => expected
+    @test actual ≈ expected
   end
-  context("BinomialDeviance fit_best_constant works") do
+  @testset "BinomialDeviance fit_best_constant works" begin
     lf = BinomialDeviance()
     dummy_vec = [0.0,0.0,0.0,0.0]
 
@@ -107,7 +105,7 @@ facts("GB Decision Tree") do
     actual = GBDecisionTree.fit_best_constant(
       lf, labels, psuedo, dummy_vec, dummy_vec
     )
-    @fact actual => expected
+    @test actual == expected
 
     labels = [1.0,1.0,1.0,1.0]
     psuedo = [1.0,1.0,1.0,1.0]
@@ -115,8 +113,6 @@ facts("GB Decision Tree") do
     actual = GBDecisionTree.fit_best_constant(
       lf, labels, psuedo, dummy_vec, dummy_vec
     )
-    @fact actual => expected
+    @test actual == expected
   end
 end
-
-end # module

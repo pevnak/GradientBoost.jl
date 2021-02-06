@@ -20,7 +20,7 @@ export GBLearner,
 
 
 # Gradient boosting learner as defined by ML API.
-struct GBLearner
+mutable struct GBLearner
   algorithm::GBAlgorithm
   output::Symbol
   model
@@ -65,7 +65,7 @@ function postprocess_pred(
   output::Symbol, lf::LossFunction, predictions::Vector{Float64})
 
   if output == :class && typeof(lf) <: BinomialDeviance
-    return round(logistic(predictions))
+    return round.(logistic(predictions), RoundNearestTiesUp)
   elseif output == :class_prob && typeof(lf) <: BinomialDeviance
     return logistic(predictions)
   elseif output == :regression && !(typeof(lf) <: BinomialDeviance)
@@ -77,7 +77,7 @@ end
 
 # Logistic function.
 function logistic(x)
-  1 ./ (1 .+ exp(-x))
+  1 ./ (1 .+ exp.(-x))
 end
 
 end # module
