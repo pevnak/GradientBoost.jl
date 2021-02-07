@@ -15,8 +15,8 @@ export GBLearner,
        BinomialDeviance,
        GBDT,
        GBBL,
-       learner_fit,
-       learner_predict
+       learner_predict,
+       learner_fit
 
 
 # Gradient boosting learner as defined by ML API.
@@ -39,7 +39,7 @@ function predict!(gbl::GBLearner, instances)
 end
 
 function fit!(gbl::GBLearner, 
-  instances::Matrix{Float64}, labels::Vector{Float64})
+  instances, labels::Vector{Float64})
 
   # No special processing required.
   gbl.model = fit(gbl.algorithm, instances, labels)

@@ -1,7 +1,7 @@
 # Loss functions.
 module LossFunctions
 using Statistics
-# importall GradientBoost.Util
+# using GradientBoost.Util
 
 export LossFunction,
        loss,

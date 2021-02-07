@@ -54,9 +54,10 @@ end
 # @param instances Instances.
 # @param labels Labels.
 # @return Model.
-function learner_fit(lf::LossFunction, learner, instances, labels)
-  error("This function must be implemented by $(learner) for $(lf)")
-end
+function learner_fit end
+# function learner_fit(lf::LossFunction, learner, instances, labels)
+#   error("This function must be implemented by $(learner) for $(lf)")
+# end
 
 # Predicts on base learner.
 #
@@ -65,9 +66,11 @@ end
 # @param model Model produced by base learner.
 # @param instances Instances.
 # @return Predictions.
-function learner_predict(lf::LossFunction, learner, model, instances)
-  error("This function must be implemented by $(learner) for $(lf)")
-end
+function learner_predict end
+# function learner_predict(lf::LossFunction, learner, model, instances)
+#   error("This function must be implemented by $(learner) for $(lf)")
+# end
+
 
 # Loss function fits
 function fit_best_constant(lf::LeastSquares,
