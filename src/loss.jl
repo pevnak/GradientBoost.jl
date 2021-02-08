@@ -14,28 +14,53 @@ export LossFunction,
 # Loss function.
 abstract type LossFunction end
 
-# Calculates loss.
-# 
-# @param lf Loss function.
-# @param y True response.
-# @param y_pred Approximated response.
-# @return Loss.
-loss(lf::LossFunction, y, y_pred) = err_must_be_overriden()
+"""
+  loss(lf::LossFunction, y, ŷ)
 
-# Calculates negative gradient of loss function.
-#
-# @param lf Loss function.
-# @param y True response.
-# @param y_pred Approximated response.
-# @return Vector of negative gradient residuals.
-negative_gradient(lf::LossFunction, y, y_pred) = err_must_be_overriden()
+  Calculates loss (a scalar value)
+  
+  @param lf Loss function.
+  @param y True response.
+  @param ŷ Approximated response.
+"""
 
-# Finds scalar value c that minimizes loss L(y, c).
-#
-# @param lf Loss function.
-# @param y True response.
-# @return Scalar value.
-minimizing_scalar(lf::LossFunction, y) = err_must_be_overriden()
+function loss end
+
+"""
+  negative_gradient(lf::LossFunction, y, ŷ)
+
+  Calculates negative gradient of a loss function.
+  
+  @param lf Loss function.
+  @param y True response.
+  @param ŷ Approximated response.
+
+  Default function relies on Zygote, but if analytic  solution exists, it can 
+  be overrriden using multiple dispatch on first argument.
+"""
+function negative_gradient(lf::LossFunction, y, ŷ)
+  -gradient(ŷ -> loss(lf, y, ŷ), ŷ)[1]
+end
+
+
+"""
+  minimizing_scalar(lf::LossFunction, y)
+
+  Finds scalar value c that minimizes loss L(y, c).
+
+  Default function relies on Zygote.jl + Roots.jl, but if analytic solution 
+  exists, it can be overrriden using multiple dispatch on  first argument.
+
+  @param lf Loss function.
+  @param y True response.
+"""
+function minimizing_scalar(lf::LossFunction, y)
+  ŷ = ones(eltype(y))
+  f(α) = loss(lf, y, α .* ŷ)
+  ∇f(α) = gradient(α -> f(α), α)[1]
+  α₀ = find_zero(∇f,  0.0)
+  α₀
+end
 
 # LeastSquares
 struct LeastSquares <: LossFunction; end
@@ -85,5 +110,16 @@ function minimizing_scalar(lf::BinomialDeviance, y)
   y_length = length(y)
   log(y_sum / (y_length - y_sum))
 end
+
+
+
+
+struct LogisticLoss <: LossFunction; end
+"""
+  loss(lf::LogisticLoss, y, ŷ)
+
+  logistic loss function `softplus.(-y .* ŷ)`
+"""
+loss(lf::LogisticLoss, y, ŷ) = mean(softplus.(-y .* ŷ))
 
 end # module

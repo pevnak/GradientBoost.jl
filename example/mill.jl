@@ -12,11 +12,12 @@ using GradientBoost.LossFunctions
 import GradientBoost.GBBaseLearner: learner_fit, fit_best_constant, learner_predict
 import GradientBoost.LossFunctions: loss, negative_gradient, minimizing_scalar
 
-
+# This stuff is needed because the library assumes its works with Matrix. It should 
+# be converted to nobs
 Base.size(x::Mill.AbstractNode, i::Int) = i == 1 ? Mill.nobs(x) : error("i = 2 does not make sense")
 Base.getindex(x::Mill.AbstractNode, i, ::Colon) = x[i]
 
-# LeastSquares
+
 struct LogisticLoss <: LossFunction; end
 
 loss(lf::LogisticLoss, y, ŷ) = mean(softplus.(-y .* ŷ))
@@ -77,6 +78,17 @@ end
 function learner_predict(loss, learner::MillLearner,  model, x)
   pmone(softmax(model(x).data)[2,:], 0.5)
 end
+
+# You might want to overload this one for speed
+# function predict(gb_model::GBModel, instances)
+#   outputs = gb_model.base_funcs[1](instances)
+#   for i = 2:length(gb_model.base_funcs)
+#     outputs .+= gb_model.learning_rate .* gb_model.base_funcs[i](instances)
+#   end
+#   return outputs
+# end
+
+
 
 gbbl = GBBL(MillLearner();loss_function = LogisticLoss(), num_iterations=10, learning_rate=1)
 gbl = GradientBoost.ML.GBLearner(gbbl, :class)
