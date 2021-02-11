@@ -1,6 +1,8 @@
 # Gradient Boosted Learner
 module GBBaseLearner
-
+using ..LossFunctions
+using ..GB: to
+using TimerOutputs
 export GBBL,
        build_base_func,
        learner_fit,
@@ -36,10 +38,9 @@ function GB.build_base_func(
   # Train learner
   lf = gb.loss_function
   learner = gb.learner
-  model = learner_fit(lf, learner, instances, psuedo)
-  psuedo_pred = learner_predict(lf, learner, model, instances)
-  model_const =
-    fit_best_constant(lf, labels, psuedo, psuedo_pred, prev_func_pred)
+  model = @timeit to "learner_fit" learner_fit(lf, learner, instances, psuedo)
+  psuedo_pred =  @timeit to "learner_predict" learner_predict(lf, learner, model, instances)
+  model_const = @timeit to "fit_best_constant" fit_best_constant(lf, labels, psuedo, psuedo_pred, prev_func_pred)
 
   # Produce function that delegates prediction to model
   return (instances) ->
@@ -71,43 +72,4 @@ function learner_fit end
   @param instances Instances.
 """
 function learner_predict end
-
-"""
-  fit_best_constant(lf::LossFunction, labels, psuedo, yₕ, y₀)
-
-  Find the best multiplier `α` minimizing error of prediction ` y₀ .+ α .* yₕ`.
-  the default implementation relies on combination of `Zygote.jl` and `Roots.jl`,
-  but for some loss function (Exponential, Quadratic, etc.) and efficient implementation
-  exists, and therefore it can be overloaded and provided.
-"""
-function fit_best_constant(lf::LossFunction, labels, psuedo, yₕ, y₀)
-  f(α) = loss(lf, labels, y₀ .+ α .* yₕ)
-  ∇f(α) = gradient(α -> f(α), α)[1]
-  α₀ = find_zero(∇f,  0.5)
-  α₀
-end
-
-
-function fit_best_constant(lf::LeastSquares,
-  labels, psuedo, psuedo_pred, prev_func_pred)
-
-  # No refitting required
-  1.0
-end
-
-function fit_best_constant(lf::LeastAbsoluteDeviation,
-  labels, psuedo, psuedo_pred, prev_func_pred)
-
-  weights = abs.(psuedo_pred)
-  values = labels .- prev_func_pred
-
-  for i = 1:length(labels)
-    if weights[i] != 0.0
-      values[i] /= psuedo_pred[i]
-    end
-  end
-
-  weighted_median(weights, values)
-end
-
 end # module

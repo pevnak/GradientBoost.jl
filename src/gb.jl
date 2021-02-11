@@ -4,6 +4,9 @@ module GB
 using Random
 using GradientBoost.Util
 using GradientBoost.LossFunctions
+using TimerOutputs
+
+const to = TimerOutput()
 
 export GBAlgorithm,
        GBModel,
@@ -35,27 +38,27 @@ function stochastic_gradient_boost(gb::GBAlgorithm, instances, labels)
   base_funcs = Vector{Function}(undef, num_iterations+1)
 
   # Create initial base function
-  initial_val = minimizing_scalar(gb.loss_function, labels)
+  initial_val = @timeit to "minimizing_scalar" minimizing_scalar(gb.loss_function, labels)
   initial_base_func = (instances) -> fill(initial_val, size(instances, 1))
 
   # Add initial base function to ensemble
   base_funcs[1] = initial_base_func
 
   # Build consecutive base functions
-  prev_func_pred = initial_base_func(instances)
+  prev_func_pred = @timeit to "initial_base_func" initial_base_func(instances)
   for iter_ind = 2:num_iterations+1
     # Obtain current residuals
-    psuedo = negative_gradient(
+    psuedo = @timeit to "negative_gradient" negative_gradient(
       gb.loss_function,
       labels,
       prev_func_pred
     )
 
     # Sample instances
-    stage_sample_ind = create_sample_indices(gb, instances, labels)
+    stage_sample_ind = @timeit to "create_sample_indices" create_sample_indices(gb, instances, labels)
 
     # Build current base function
-    stage_base_func = build_base_func(
+    stage_base_func = @timeit to "build_base_func" build_base_func(
       gb,
       instances[stage_sample_ind, :],
       labels[stage_sample_ind],
@@ -85,23 +88,19 @@ function predict(gb_model::GBModel, instances)
   return outputs
 end
 
+"""
 # Build base (basis) function for gradient boosting algorithm.
-#
-# @param gb Gradient boosting algorithm.
-# @param instances Instances.
-# @param labels Labels.
-# @param prev_func_pred Previous base function's predictions.
-# @param psuedo Psuedo-labels (psuedo-response).
-# @return Function of form (instances) -> predictions.
-function build_base_func(
-  gb::GBAlgorithm,
-  instances,
-  labels,
-  prev_func_pred,
-  psuedo)
+  function build_base_func(gb::GBAlgorithm, instances, labels, prev_func_pred, psuedo)
 
-  err_must_be_overriden("GradientBoost.GB.build_base_func")
-end
+  @param gb Gradient boosting algorithm.
+  @param instances Instances.
+  @param labels Labels.
+  @param prev_func_pred Previous base function's predictions.
+  @param psuedo Psuedo-labels (psuedo-response).
+  
+  Function of form (instances) -> predictions.
+"""
+function build_base_func end
 
 # Default sample method for gradient boosting algorithms.
 # By default, it is sampling without replacement.

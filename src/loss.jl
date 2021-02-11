@@ -1,12 +1,16 @@
 # Loss functions.
 module LossFunctions
 using Statistics
+using Roots
+using Zygote
+using NNlib
 # using GradientBoost.Util
 
 export LossFunction,
        loss,
        negative_gradient,
        minimizing_scalar,
+       fit_best_constant,
        LeastSquares,
        LeastAbsoluteDeviation,
        BinomialDeviance
@@ -62,6 +66,21 @@ function minimizing_scalar(lf::LossFunction, y)
   α₀
 end
 
+"""
+  fit_best_constant(lf::LossFunction, labels, psuedo, yₕ, y₀)
+
+  Find the best multiplier `α` minimizing error of prediction ` y₀ .+ α .* yₕ`.
+  the default implementation relies on combination of `Zygote.jl` and `Roots.jl`,
+  but for some loss function (Exponential, Quadratic, etc.) and efficient implementation
+  exists, and therefore it can be overloaded and provided.
+"""
+function fit_best_constant(lf::LossFunction, labels, psuedo, yₕ, y₀)
+  f(α) = loss(lf, labels, y₀ .+ α .* yₕ)
+  ∇f(α) = gradient(α -> f(α), α)[1]
+  α₀ = find_zero(∇f,  0.5)
+  α₀
+end
+
 # LeastSquares
 struct LeastSquares <: LossFunction; end
 
@@ -76,6 +95,14 @@ end
 function minimizing_scalar(lf::LeastSquares, y)
   mean(y)
 end
+
+function fit_best_constant(lf::LeastSquares,
+  labels, psuedo, psuedo_pred, prev_func_pred)
+
+  # No refitting required
+  1.0
+end
+
 
 
 # LeastAbsoluteDeviation
@@ -93,8 +120,23 @@ function minimizing_scalar(lf::LeastAbsoluteDeviation, y)
   median(y)
 end
 
+function fit_best_constant(lf::LeastAbsoluteDeviation,
+  labels, psuedo, psuedo_pred, prev_func_pred)
 
-# Binomial Deviance (Two Classes {0,1})
+  weights = abs.(psuedo_pred)
+  values = labels .- prev_func_pred
+
+  for i = 1:length(labels)
+    if weights[i] != 0.0
+      values[i] /= psuedo_pred[i]
+    end
+  end
+
+  weighted_median(weights, values)
+end
+
+
+# Binomial Deviance (Two Classes {0,1}) seems similar to logistic loss
 struct BinomialDeviance <: LossFunction; end
 
 function loss(lf::BinomialDeviance, y, y_pred)
